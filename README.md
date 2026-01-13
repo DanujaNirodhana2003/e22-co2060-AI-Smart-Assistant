@@ -22,8 +22,7 @@ The system aims to simplify complex computer interactions and make them accessib
 - **Hotkey & Region Selection:** Users can trigger OCR with a hotkey and select specific screen areas for analysis.  
 - **AI Reasoning:** Processes extracted text to determine context, suggest actions, or guide users.  
 - **Chatbot Interface:** Displays instructions or recommendations on-screen and allows user interaction.  
-- **Automation Module:** Performs safe mouse and keyboard actions based on AI suggestions.  
-- **Microcontroller Integration (Optional):** Sends extracted text or instructions to an external microcontroller.  
+- **Automation Module:** Performs safe mouse and keyboard actions based on AI suggestions.    
 
 ---
 
