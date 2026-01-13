@@ -1,0 +1,5 @@
+{
+    "tesseract_cmd": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+    "serial_port": "COM3",
+    "baud_rate": 9600
+}

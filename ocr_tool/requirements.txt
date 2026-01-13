@@ -1,0 +1,7 @@
+pystray
+Pillow
+pytesseract
+pyserial
+keyboard
+pyperclip
+tk
