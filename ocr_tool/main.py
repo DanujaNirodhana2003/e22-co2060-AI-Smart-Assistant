@@ -25,6 +25,11 @@ TESSERACT_CMD = config.get("tesseract_cmd", r"C:\Program Files\Tesseract-OCR\tes
 SERIAL_PORT = config.get("serial_port", "COM3")
 BAUD_RATE = config.get("baud_rate", 9600)
 
+
+
+# Global icon reference for hotkey access
+icon = None
+
 ocr = None
 try:
     ocr = OCREngine(TESSERACT_CMD)
@@ -40,9 +45,16 @@ def create_icon_image():
     dc.rectangle((16, 16, 48, 48), fill=(0, 0, 0))
     return image
 
-def on_quit(icon, item):
-    icon.stop()
+def on_quit(icon_obj, item):
+    icon_obj.stop()
     sys.exit()
+
+def exit_app_hotkey():
+    print("Exit hotkey pressed. Exiting...")
+    if icon:
+        icon.stop()
+    # Force exit to ensure all threads (like keyboard) are killed
+    os._exit(0)
 
 def perform_capture():
     print("Hotkey triggered!")
@@ -75,11 +87,15 @@ def perform_capture():
 
 def setup_hotkey():
     keyboard.add_hotkey('ctrl+shift+o', perform_capture)
+    keyboard.add_hotkey('ctrl+shift+p', exit_app_hotkey)
+
 
 def main():
+    global icon
     setup_hotkey()
     print("Background OCR Service Running...")
     print("Press Ctrl+Shift+O to capture.")
+    print("Press Ctrl+Shift+P to exit.")
     
     icon = pystray.Icon("OCR Tool")
     icon.menu = pystray.Menu(pystray.MenuItem('Quit', on_quit))
