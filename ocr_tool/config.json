@@ -1,7 +1,6 @@
 {
-    "tesseract_cmd": "D:\\Academic\\2yp\\AI-Smart-Assistant\\tesseract\\tesseract.exe",
+    "tesseract_cmd": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
     "serial_port": "COM3",
-    "baud_rate": 9600
+    "baud_rate": 9600,
+    "_comment": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 }
-
-

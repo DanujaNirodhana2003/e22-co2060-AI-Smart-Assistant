@@ -1,4 +1,5 @@
 import json
+import subprocess
 import time
 import threading
 import multiprocessing  # <--- Added
@@ -136,6 +137,13 @@ def perform_capture():
                     print(f"Extracted Text: {text}")
                     copy_to_clipboard(text)
 
+                    # Launch Chat UI  ---------------------------
+                    try:
+                        print("Launching Chat UI...")
+                        subprocess.Popen([sys.executable, os.path.join(os.path.dirname(__file__), 'chat_ui.py')])
+                    except Exception as e:
+                        print(f"Failed to launch Chat UI: {e}")
+                    # -----------------------------------------------------------------------------
                     # 🔍 Check local error DB
                     solution = find_error_solution(text)
                     if solution:
