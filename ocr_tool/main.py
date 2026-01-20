@@ -1,6 +1,7 @@
 import json
 import time
 import threading
+import multiprocessing  # <--- Added
 import keyboard
 import pystray
 from PIL import Image, ImageDraw
@@ -9,9 +10,11 @@ import os
 import difflib
 import re
 
+# --- Custom Modules ---
 from overlay import RegionSelection
 from ocr_engine import OCREngine
 from comms import copy_to_clipboard
+import animation  # <--- Added (Make sure animation.py is in the same folder)
 
 # --------------------------
 # Config and DB paths
@@ -40,6 +43,18 @@ except Exception as e:
     print(f"OCR Engine Init Error: {e}")
 
 # --------------------------
+# Animation Helper (New)
+# --------------------------
+def run_animation_process():
+    """
+    Launches the full-screen transparent animation.
+    """
+    try:
+        animation.main()
+    except Exception as e:
+        print(f"Animation error: {e}")
+
+# --------------------------
 # Error DB Helpers
 # --------------------------
 def normalize_text(text: str) -> str:
@@ -48,27 +63,22 @@ def normalize_text(text: str) -> str:
     text = re.sub(r"[^a-z0-9.\s]", " ", text)  # remove punctuation except dot
     return " ".join(text.split())  # collapse whitespace
 
-
-
 def load_db() -> dict:
     if not os.path.exists(DB_FILE):
         return {}
     with open(DB_FILE, "r", encoding="utf-8") as f:
         raw = json.load(f)
-    # normalize keys to lowercase
     return {k.lower(): v for k, v in raw.items()}
 
 def find_error_solution(text: str):
     db = load_db()
     normalized = normalize_text(text)
-
-    print("Normalized OCR:", normalized)  # debug
+    print("Normalized OCR:", normalized)
 
     for key, value in db.items():
         if key in normalized:
             print(f"✅ Exact match for key: {key}")
             return value
-        # fuzzy similarity
         ratio = difflib.SequenceMatcher(None, key, normalized).ratio()
         if ratio > 0.6:
             print(f"🤏 Fuzzy match for key: {key} (score {ratio:.2f})")
@@ -101,11 +111,18 @@ def exit_app_hotkey():
         icon.stop()
 
 # --------------------------
-# Capture Logic hey
+# Capture Logic (Updated)
 # --------------------------
 def perform_capture():
     print("Hotkey triggered!")
+    anim_process = None  # <--- Track the process
+
     try:
+        # 1. Start Animation
+        anim_process = multiprocessing.Process(target=run_animation_process)
+        anim_process.start()
+
+        # 2. Run Existing Selection Logic
         region_selector = RegionSelection()
         selection = region_selector.get_region()
 
@@ -132,8 +149,15 @@ def perform_capture():
                 print("OCR engine not initialized.")
         else:
             print("Selection cancelled.")
+            
     except Exception as e:
         print(f"Error in capture logic: {e}")
+    
+    finally:
+        # 3. Always close animation when done
+        if anim_process and anim_process.is_alive():
+            anim_process.terminate()
+            anim_process.join()
 
 # --------------------------
 # Hotkeys and Tray
@@ -159,11 +183,9 @@ def main():
     print("Press Ctrl+Alt+Shift+O to capture.")
     print("Press Ctrl+Alt+Shift+P to exit.")
     
-    # Start tray icon in background thread
     tray_thread = threading.Thread(target=start_tray_icon, daemon=True)
     tray_thread.start()
 
-    # Loop until exit hotkey pressed
     while running:
         time.sleep(0.5)
 
@@ -171,4 +193,5 @@ def main():
     os._exit(0)
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()  # <--- Required for Windows
     main()
