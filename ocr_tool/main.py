@@ -12,6 +12,7 @@ import re
 from overlay import RegionSelection
 from ocr_engine import OCREngine
 from comms import copy_to_clipboard
+from mistral_client import MistralClient
 
 # --------------------------
 # Config and DB paths
@@ -125,7 +126,35 @@ def perform_capture():
                         print(f"[LOCAL DB MATCH] Category: {solution['category']}")
                         print(f"Suggested Fix: {solution['solution']}")
                     else:
-                        print("[LOCAL DB] No match found. Consider AI fallback.")
+                        print("[LOCAL DB] No match found. Using AI fallback...")
+
+                        # AI fallback
+                        ai_client = MistralClient()
+                        ai_response = ai_client.generate(
+                            f"The following error was detected: {text}. "
+                            f"Suggest a possible fix."
+                        )
+
+                        if "error" in ai_response:
+                            print(f"[AI ERROR] {ai_response['error']}")
+                        else:
+                            suggestion = ai_response.get("response") or ai_response.get("text")
+                            print(f"[AI SUGGESTION] {suggestion}")
+
+                            # 📝 Cache AI suggestion into local DB
+                            try:
+                                db = load_db()
+                                normalized = normalize_text(text)
+                                db[normalized] = {
+                                    "category": "AI-generated",
+                                    "solution": suggestion
+                                }
+                                with open(DB_FILE, "w", encoding="utf-8") as f:
+                                    json.dump(db, f, indent=4, ensure_ascii=False)
+                                print("[CACHE] AI suggestion saved to local DB.")
+                            except Exception as e:
+                                print(f"[CACHE ERROR] Could not save AI suggestion: {e}")
+
                 else:
                     print("No text detected. Try selecting a larger area or clearer text.")
             else:

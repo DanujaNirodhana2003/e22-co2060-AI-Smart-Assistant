@@ -13,5 +13,9 @@
         "category": "directx_error",
         "solution": "Install the latest DirectX End-User Runtime from Microsoft.",
         "confidence": "medium"
+    },
+    "error connection refused on port 8080": {
+        "category": "AI-generated",
+        "solution": " This error usually indicates that the server is not running or not configured correctly on port 8080. Here are some possible solutions:\n\n1. Check if the server is running:\n   - Make sure your application or service is up and running.\n   - If you're using a web server like Apache, Nginx, or Node.js, check if they are running with the appropriate command (e.g., `sudo systemctl start apache2` for Ubuntu).\n\n2. Check the correct port:\n   - Ensure that your application is configured to run on port 8080. If not, you may need to change the configuration or use a different port.\n\n3. Firewall issues:\n   - Your firewall might be blocking the connection on port 8080. Temporarily disabling the firewall (if possible) or allowing traffic on that specific port can help resolve the issue. If you're using Ubuntu, you can use `sudo ufw allow 8080/tcp` to open the port in the Uncomplicated Firewall (UFW).\n\n4. Restart the application:\n   -"
     }
 }
