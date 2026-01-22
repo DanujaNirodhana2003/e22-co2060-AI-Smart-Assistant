@@ -12,7 +12,8 @@ import re
 from src.ocr_module.overlay import RegionSelection
 from src.ocr_module.engine import OCREngine
 from src.automation.comms import copy_to_clipboard
-# from src.ai_module.client import MistralClient
+from src.ai_module.client import MistralClient
+# from src.ai_module.azure_client import AzureClient
 
 # --------------------------
 # Config and DB paths
@@ -171,6 +172,38 @@ def run_capture_logic():
                         #         print(f"[CACHE ERROR] Could not save AI suggestion: {e}")
                         
                         print("No match found in local DB.")
+                        
+                        # ---------------------------------------------------------
+                        # AI Fallback (Ollama / Mistral)
+                        # ---------------------------------------------------------
+                        print("[LOCAL DB] No match found. Using AI fallback (Ollama)...")
+
+                        ai_client = MistralClient()
+                        ai_response = ai_client.generate(
+                            f"The following error was detected: {text}. "
+                            f"Suggest a possible fix."
+                        )
+
+                        if "error" in ai_response:
+                            print(f"[AI ERROR] {ai_response['error']}")
+                        else:
+                            suggestion = ai_response.get("response") or ai_response.get("text")
+                            print(f"[AI SUGGESTION] {suggestion}")
+
+                            # 📝 Cache AI suggestion into local DB
+                            try:
+                                db = load_db()
+                                normalized = normalize_text(text)
+                                db[normalized] = {
+                                    "category": "AI-generated",
+                                    "solution": suggestion
+                                }
+                                with open(DB_FILE, "w", encoding="utf-8") as f:
+                                    json.dump(db, f, indent=4, ensure_ascii=False)
+                                print("[CACHE] AI suggestion saved to local DB.")
+                            except Exception as e:
+                                print(f"[CACHE ERROR] Could not save AI suggestion: {e}")
+                        # ---------------------------------------------------------
 
                 else:
                     print("No text detected. Try selecting a larger area or clearer text.")
