@@ -26,3 +26,24 @@ The system aims to simplify complex computer interactions and make them accessib
 
 ---
 
+
+## Project Structure
+
+- `src/`: Source code modules (OCR, AI, Automation)
+- `docs/`: Documentation and timeline
+- `tests/`: Test scripts
+- `assets/`: Project assets
+
+## How to Run
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run the application:
+   ```bash
+   python -m src.main
+   ```
+
+---

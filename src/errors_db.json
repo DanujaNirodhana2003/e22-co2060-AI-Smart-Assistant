@@ -1,0 +1,33 @@
+{
+    "msvcp140.dll is missing": {
+        "category": "missing_dll",
+        "solution": "Install Microsoft Visual C++ Redistributable (2015–2022). Restart the PC after installation.",
+        "confidence": "high"
+    },
+    "vcruntime140.dll was not found": {
+        "category": "missing_dll",
+        "solution": "Download and install Microsoft Visual C++ Redistributable (2015–2022).",
+        "confidence": "high"
+    },
+    "directx runtime missing": {
+        "category": "directx_error",
+        "solution": "Install the latest DirectX End-User Runtime from Microsoft.",
+        "confidence": "medium"
+    },
+    "error connection refused on port 8080": {
+        "category": "AI-generated",
+        "solution": " This error usually indicates that the server is not running or not configured correctly on port 8080. Here are some possible solutions:\n\n1. Check if the server is running:\n   - Make sure your application or service is up and running.\n   - If you're using a web server like Apache, Nginx, or Node.js, check if they are running with the appropriate command (e.g., `sudo systemctl start apache2` for Ubuntu).\n\n2. Check the correct port:\n   - Ensure that your application is configured to run on port 8080. If not, you may need to change the configuration or use a different port.\n\n3. Firewall issues:\n   - Your firewall might be blocking the connection on port 8080. Temporarily disabling the firewall (if possible) or allowing traffic on that specific port can help resolve the issue. If you're using Ubuntu, you can use `sudo ufw allow 8080/tcp` to open the port in the Uncomplicated Firewall (UFW).\n\n4. Restart the application:\n   -"
+    },
+    "the code execution cannot proceed because vcruntime146.d11 was not found.": {
+        "category": "AI-generated",
+        "solution": " ERROR SUMMARY:\nThe error is related to a missing Microsoft Visual C++ Redistributable package required by some applications to run properly.\n\nPOSSIBLE CAUSES:\n- The package was never installed on the computer\n- The package got uninstalled or corrupted\n- Incorrect system configuration\n\nSTEP-BY-STEP FIX:\n1. Visit Microsoft's official website for Visual C++ Redistributable packages at https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads\n2. Download the appropriate version for your system (x64 or x86)\n3. Run the downloaded executable file to install the package\n\nWARNINGS:\n- Ensure you download the correct version of Visual C++ Redistributable for your operating system and architecture (32-bit or 64-bit). Installing the incorrect version may cause more issues.\n- If you are unsure whether this is the correct solution to your problem, consider consulting with a technical support professional before proceeding."
+    },
+    "modulenotfounderror no module named numpy": {
+        "category": "AI-generated",
+        "solution": " ERROR SUMMARY:\nThe error indicates that the Python module 'numpy' is not installed in your current environment.\n\nPOSSIBLE CAUSES:\n- You haven't installed the numpy package yet.\n- The installation of numpy has been unsuccessful or incomplete.\n\nSTEP-BY-STEP FIX:\n1. Open a terminal or command prompt and navigate to your Python project directory.\n2. Run the following command to install numpy: `pip install numpy`\n3. If you're using a virtual environment, make sure to activate it before running the installation command.\n\nWARNINGS (if any):\n- Ensure that you have the correct version of Python installed on your system (usually 3.x).\n- Running `pip install -upgrade pip` might be necessary if your pip is outdated, which can help resolve potential installation issues."
+    },
+    "indentationerror unexpected indent": {
+        "category": "AI-generated",
+        "solution": " ERROR SUMMARY:\nThe error is an IndentationError, which means there's a problem with the formatting of your code due to incorrect spacing or indentation. Python relies on proper indentation for syntax and this error indicates that the code has been improperly indented.\n\nPOSSIBLE CAUSES:\n- Incorrect number of spaces for indentation\n- Mixed tab and space indentation\n- Inconsistent indentation within a block of code\n\nSTEP-BY-STEP FIX:\n1. Check your code to ensure that each level of nesting (if/else statements, loops) has consistent indentation with the correct number of spaces.\n2. Use either tabs or spaces consistently for indentation throughout your code. Do not mix both in a single file.\n3. If you're using an Integrated Development Environment (IDE), it may have auto-formatting options to help with the indentation.\n\nWARNINGS:\n- Make sure to backup your work before making changes, as incorrect modifications could potentially damage or lose parts of your code.\n- While this error is relatively simple to fix, it's important to pay attention to proper indent"
+    }
+}

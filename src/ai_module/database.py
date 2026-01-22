@@ -1,7 +1,7 @@
 import json
 import os
 
-DB_FILE = "errors_db.json"
+DB_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'errors_db.json')
 
 
 def normalize_text(text: str) -> str:
