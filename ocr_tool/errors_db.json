@@ -1,0 +1,17 @@
+{
+    "msvcp140.dll is missing": {
+        "category": "missing_dll",
+        "solution": "Install Microsoft Visual C++ Redistributable (2015–2022). Restart the PC after installation.",
+        "confidence": "high"
+    },
+    "vcruntime140.dll was not found": {
+        "category": "missing_dll",
+        "solution": "Download and install Microsoft Visual C++ Redistributable (2015–2022).",
+        "confidence": "high"
+    },
+    "directx runtime missing": {
+        "category": "directx_error",
+        "solution": "Install the latest DirectX End-User Runtime from Microsoft.",
+        "confidence": "medium"
+    }
+}
