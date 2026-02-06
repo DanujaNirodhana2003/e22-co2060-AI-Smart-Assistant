@@ -1,0 +1,43 @@
+{
+    "title": "AI Smart Assistant",
+    "team": [
+        {
+            "name": "K.D.N.Chandrasena",
+            "email": "e22054@eng.pdn.ac.lk",
+            "eNumber": "E/22/054"
+        },
+        {
+            "name": "P.A.K.N.Sooriyabandara",
+            "email": "e22378@eng.pdn.ac.lk",
+            "eNumber": "E/22/378"
+        },
+        {
+            "name": "K.J.V.Kahagalla",
+            "email": "e22179@eng.pdn.ac.lk",
+            "eNumber": "E/22/179"
+        },
+        {
+            "name": "K.A.H.Kumarasinghe",
+            "email": "e22278@eng.pdn.ac.lk",
+            "eNumber": "E/22/2058"
+        }
+    ],
+    "_supervisors": [
+        {
+            "name": "Dr. Supervisor 1",
+            "email": "email@eng.pdn.ac.lk"
+        },
+        {
+            "name": "Supervisor 2",
+            "email": "email@eng.pdn.ac.lk"
+        }
+    ],
+    "tags": [
+        "OCR",
+        "AI",
+        "Python",
+        "CO2060"
+    ],
+    "image": "cover_page.jpg",
+    "thumbnail": "thumbnail.jpg"
+}
