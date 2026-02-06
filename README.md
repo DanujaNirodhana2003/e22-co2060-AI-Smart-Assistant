@@ -41,6 +41,8 @@ The system aims to simplify complex computer interactions and make them accessib
    ```
 
 2. Run the application:
+   go to ```bash AI-Smart-Assistant\code``` file.
+   Then
    ```bash
    python -m src.main
    ```
