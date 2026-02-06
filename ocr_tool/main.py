@@ -1,7 +1,7 @@
 import json
 import time
 import threading
-import multiprocessing  # <--- Added
+import multiprocessing
 import keyboard
 import pystray
 from PIL import Image, ImageDraw
@@ -9,12 +9,22 @@ import sys
 import os
 import difflib
 import re
+import ctypes # Required for DPI fix
 
 # --- Custom Modules ---
 from overlay import RegionSelection
 from ocr_engine import OCREngine
 from comms import copy_to_clipboard
-import animation  # <--- Added (Make sure animation.py is in the same folder)
+import animation  
+import chat_ui
+
+# --------------------------
+# DPI Awareness Fix (Critical for correct coords)
+# --------------------------
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except Exception:
+    ctypes.windll.user32.SetProcessDPIAware()
 
 # --------------------------
 # Config and DB paths
@@ -32,23 +42,22 @@ config = load_config()
 TESSERACT_CMD = config.get("tesseract_cmd", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
 
 # --------------------------
-# OCR Engine Init
+# Globals
 # --------------------------
 icon = None
 running = True
 ocr = None
+chat_queue = None
+
 try:
     ocr = OCREngine(TESSERACT_CMD)
 except Exception as e:
     print(f"OCR Engine Init Error: {e}")
 
 # --------------------------
-# Animation Helper (New)
+# Animation Helper
 # --------------------------
 def run_animation_process():
-    """
-    Launches the full-screen transparent animation.
-    """
     try:
         animation.main()
     except Exception as e:
@@ -58,42 +67,28 @@ def run_animation_process():
 # Error DB Helpers
 # --------------------------
 def normalize_text(text: str) -> str:
-    text = text.lower()
-    text = text.replace("’", "'")
-    text = re.sub(r"[^a-z0-9.\s]", " ", text)  # remove punctuation except dot
-    return " ".join(text.split())  # collapse whitespace
+    text = text.lower().replace("’", "'")
+    text = re.sub(r"[^a-z0-9.\s]", " ", text) 
+    return " ".join(text.split())
 
 def load_db() -> dict:
-    if not os.path.exists(DB_FILE):
-        return {}
-    with open(DB_FILE, "r", encoding="utf-8") as f:
-        raw = json.load(f)
-    return {k.lower(): v for k, v in raw.items()}
+    if not os.path.exists(DB_FILE): return {}
+    with open(DB_FILE, "r", encoding="utf-8") as f: return json.load(f)
 
 def find_error_solution(text: str):
     db = load_db()
     normalized = normalize_text(text)
-    print("Normalized OCR:", normalized)
-
     for key, value in db.items():
-        if key in normalized:
-            print(f"✅ Exact match for key: {key}")
-            return value
+        if key in normalized: return value
         ratio = difflib.SequenceMatcher(None, key, normalized).ratio()
-        if ratio > 0.6:
-            print(f"🤏 Fuzzy match for key: {key} (score {ratio:.2f})")
-            return value
-
-    print("❌ No match found")
+        if ratio > 0.6: return value
     return None
 
 # --------------------------
 # Tray Icon
 # --------------------------
 def create_icon_image():
-    width = 64
-    height = 64
-    image = Image.new('RGB', (width, height), color=(0, 0, 0))
+    image = Image.new('RGB', (64, 64), color=(0, 0, 0))
     dc = ImageDraw.Draw(image)
     dc.rectangle((16, 16, 48, 48), fill=(0, 0, 0))
     return image
@@ -105,67 +100,66 @@ def on_quit(icon_obj, item):
 
 def exit_app_hotkey():
     global running
-    print("Exit hotkey pressed. Exiting...")
+    print("Exit hotkey pressed.")
     running = False
-    if icon:
-        icon.stop()
+    if icon: icon.stop()
 
 # --------------------------
-# Capture Logic (Updated)
+# Capture Logic
 # --------------------------
 def perform_capture():
     print("Hotkey triggered!")
-    anim_process = None  # <--- Track the process
+    anim_process = None 
 
     try:
         # 1. Start Animation
         anim_process = multiprocessing.Process(target=run_animation_process)
         anim_process.start()
 
-        # 2. Run Existing Selection Logic
+        # 2. Run Selection
         region_selector = RegionSelection()
         selection = region_selector.get_region()
 
         if selection:
-            print(f"Region selected: {selection}")
-
-            # 3. Stop Animation BEFORE capture to avoid blocking text
-            if anim_process and anim_process.is_alive():
+            # 3. Stop Animation IMMEDIATELY
+            if anim_process.is_alive():
                 anim_process.terminate()
                 anim_process.join()
 
+            # --- [FIX] WAIT FOR OVERLAY TO CLEAR ---
+            # Give the screen 0.3 seconds to repaint the desktop
+            # before taking the screenshot.
+            time.sleep(0.3) 
+            # ---------------------------------------
+
             if ocr:
+                print(f"Capturing region: {selection}")
                 text = ocr.capture_and_extract(selection)
 
                 if text:
-                    print(f"Extracted Text: {text}")
+                    print(f"Extracted: {text}")
                     copy_to_clipboard(text)
-
-                    # 🔍 Check local error DB
+                    
+                    # --- Send to Chat ---
+                    if chat_queue:
+                        chat_queue.put(text)
+                    
                     solution = find_error_solution(text)
-                    if solution:
-                        print(f"[LOCAL DB MATCH] Category: {solution['category']}")
-                        print(f"Suggested Fix: {solution['solution']}")
-                    else:
-                        print("[LOCAL DB] No match found. Consider AI fallback.")
+                    if solution: print(f"Fix: {solution['solution']}")
                 else:
-                    print("No text detected. Try selecting a larger area or clearer text.")
-            else:
-                print("OCR engine not initialized.")
+                    print("No text detected (Clean Capture).")
         else:
             print("Selection cancelled.")
             
     except Exception as e:
-        print(f"Error in capture logic: {e}")
-    
+        print(f"Error: {e}")
     finally:
-        # Cleanup if something failed
         if anim_process and anim_process.is_alive():
             anim_process.terminate()
             anim_process.join()
 
 # --------------------------
-# Hotkeys and Tray
+# Main Loop
 # --------------------------
 def setup_hotkey():
     keyboard.add_hotkey('ctrl+alt+shift+o', perform_capture)
@@ -176,27 +170,31 @@ def start_tray_icon():
     icon = pystray.Icon("OCR Tool")
     icon.menu = pystray.Menu(pystray.MenuItem('Quit', on_quit))
     icon.icon = create_icon_image()
-    icon.title = "OCR Tool"
     icon.run()
 
-# --------------------------
-# Main Loop
-# --------------------------
 def main():
+    global chat_queue
     setup_hotkey()
-    print("Background OCR Service Running...")
-    print("Press Ctrl+Alt+Shift+O to capture.")
-    print("Press Ctrl+Alt+Shift+P to exit.")
     
+    print("Background OCR Service Running...")
+    print("-------------------------------------------------")
+    print("Capture: Ctrl + Alt + Shift + O")
+    print("Exit:    Ctrl + Alt + Shift + P")
+    print("-------------------------------------------------")
+    
+    chat_queue, chat_process = chat_ui.start_chat_process()
+
     tray_thread = threading.Thread(target=start_tray_icon, daemon=True)
     tray_thread.start()
 
     while running:
         time.sleep(0.5)
 
-    print("Exiting program...")
+    print("Exiting...")
+    if chat_process.is_alive():
+        chat_process.terminate()
     os._exit(0)
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()  # <--- Required for Windows
+    multiprocessing.freeze_support() 
     main()

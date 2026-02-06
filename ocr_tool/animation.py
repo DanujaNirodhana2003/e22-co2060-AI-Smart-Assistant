@@ -1,153 +1,197 @@
-import pygame
-import math
-import time
-import os
-import ctypes
-from ctypes import windll
+# import pygame
+# import math
+# import time
+# import os
+# import ctypes
+# from ctypes import windll, wintypes, byref, c_ubyte
 
-# --- Configuration ---
-FPS = 60
-# Reduced window size for a tighter look
-WIDTH, HEIGHT = 350, 350 
-BG_COLOR = (5, 0, 10)     # Dark background (transparent key)
+# # --- CONFIGURATION ---
+# FPS = 60
+# COLOR_CORE = (255, 255, 255)  # White
+# COLOR_GLOW = (40, 200, 255)   # Cyan
 
-# --- Colors (Siri "Liquid" Palette) ---
-CYAN    = (40, 200, 255)
-BLUE    = (20, 50, 255)
-PURPLE  = (180, 10, 220)
-MAGENTA = (255, 40, 160)
-WHITE   = (200, 240, 255) # For the hot core
+# # --- WINDOWS API ---
+# GWL_EXSTYLE = -20
+# WS_EX_LAYERED = 0x00080000
+# WS_EX_TOPMOST = 0x00000008
+# WS_POPUP = 0x80000000
+# ULW_ALPHA = 0x00000002
+# AC_SRC_ALPHA = 0x01
 
-def make_window_transparent(hwnd):
-    try:
-        GWL_EXSTYLE = -20
-        WS_EX_LAYERED = 0x00080000
-        LWA_COLORKEY = 0x00000001
-        
-        style = windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style | WS_EX_LAYERED)
-        
-        r, g, b = BG_COLOR
-        color_key = b << 16 | g << 8 | r
-        windll.user32.SetLayeredWindowAttributes(hwnd, color_key, 0, LWA_COLORKEY)
-    except Exception as e:
-        print(f"Transparency Error: {e}")
+# class POINT(ctypes.Structure):
+#     _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
 
-class LiquidBlob:
-    def __init__(self, color, max_radius, speed_x, speed_y, offset, wobble_amount):
-        self.color = color
-        self.max_radius = max_radius
-        self.speed_x = speed_x
-        self.speed_y = speed_y
-        self.offset = offset
-        self.wobble_amount = wobble_amount
-        
-        # Pre-render the glow texture
-        self.surface = self._create_glow_texture(max_radius, color)
+# class SIZE(ctypes.Structure):
+#     _fields_ = [("cx", ctypes.c_long), ("cy", ctypes.c_long)]
 
-    def _create_glow_texture(self, radius, color):
-        size = radius * 2
-        surf = pygame.Surface((size, size), pygame.SRCALPHA)
-        
-        # Draw soft gradient
-        # We use more steps (density) for a smoother look
-        for i in range(radius, 0, -1):
-            # Calculate Alpha: Center is opaque, edges are transparent
-            dist_norm = (radius - i) / radius
-            alpha = int(40 * (dist_norm**2)) # Soft quadratic falloff
-            
-            draw_color = (*color, alpha) 
-            pygame.draw.circle(surf, draw_color, (radius, radius), i)
-        return surf
+# class BLENDFUNCTION(ctypes.Structure):
+#     _fields_ = [
+#         ("BlendOp", c_ubyte),
+#         ("BlendFlags", c_ubyte),
+#         ("SourceConstantAlpha", c_ubyte),
+#         ("AlphaFormat", c_ubyte)
+#     ]
 
-    def draw(self, surface, center, t):
-        cx, cy = center
-        
-        # --- COMPLEX MOVEMENT (Lissajous Figure) ---
-        # Instead of a perfect circle, x and y move at different speeds
-        # This creates a "random" organic liquid motion
-        move_x = math.sin(t * self.speed_x + self.offset) * self.wobble_amount
-        move_y = math.cos(t * self.speed_y + self.offset) * (self.wobble_amount * 0.8)
-        
-        # Breathing effect (Size changes slightly)
-        breath = math.sin(t * 3 + self.offset) * 5
-        
-        # Final Position
-        x = cx + move_x
-        y = cy + move_y
-        
-        # Draw centered
-        radius_now = self.max_radius + int(breath)
-        
-        # Scale texture slightly for the breathing effect
-        if abs(breath) > 1:
-            try:
-                # Fast scaling
-                new_size = int(radius_now * 2)
-                scaled_surf = pygame.transform.scale(self.surface, (new_size, new_size))
-                surface.blit(scaled_surf, (x - radius_now, y - radius_now), special_flags=pygame.BLEND_ADD)
-            except:
-                pass
-        else:
-            surface.blit(self.surface, (x - self.max_radius, y - self.max_radius), special_flags=pygame.BLEND_ADD)
+# def set_layered_style(hwnd):
+#     """Sets the WS_EX_LAYERED style without setting a color key."""
+#     user32 = ctypes.windll.user32
+#     style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+#     # We Add LAYERED, TOPMOST and TRANSPARENT (for click-through)
+#     user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style | WS_EX_LAYERED | WS_EX_TOPMOST)
 
-def main():
-    # 1. Setup
-    user32 = ctypes.windll.user32
-    screen_w = user32.GetSystemMetrics(0)
-    screen_h = user32.GetSystemMetrics(1)
+# def update_window_per_pixel(hwnd, surface):
+#     """
+#     Uploads the Pygame surface to the Windows window using per-pixel alpha.
+#     """
+#     user32 = ctypes.windll.user32
+#     gdi32 = ctypes.windll.gdi32
+
+#     w, h = surface.get_size()
+
+#     # 1. Get Pygame Pixel Data (BGRA)
+#     # Windows expects BGRA (Blue-Green-Red-Alpha)
+#     pixel_data = pygame.image.tostring(surface, 'BGRA', False)
+
+#     # 2. Get DC
+#     hdc_screen = user32.GetDC(0)
+#     hdc_mem = gdi32.CreateCompatibleDC(hdc_screen)
+
+#     # 3. Create Bitmap Header
+#     class BITMAPINFOHEADER(ctypes.Structure):
+#         _fields_ = [
+#             ("biSize", wintypes.DWORD),
+#             ("biWidth", wintypes.LONG),
+#             ("biHeight", wintypes.LONG),
+#             ("biPlanes", wintypes.WORD),
+#             ("biBitCount", wintypes.WORD),
+#             ("biCompression", wintypes.DWORD),
+#             ("biSizeImage", wintypes.DWORD),
+#             ("biXPelsPerMeter", wintypes.LONG),
+#             ("biYPelsPerMeter", wintypes.LONG),
+#             ("biClrUsed", wintypes.DWORD),
+#             ("biClrImportant", wintypes.DWORD)
+#         ]
+
+#     bmi = BITMAPINFOHEADER()
+#     bmi.biSize = ctypes.sizeof(BITMAPINFOHEADER)
+#     bmi.biWidth = w
+#     bmi.biHeight = -h  # Top-down
+#     bmi.biPlanes = 1
+#     bmi.biBitCount = 32
+#     bmi.biCompression = 0 # BI_RGB
+
+#     # 4. Create DIB Section and copy pixels
+#     bits = ctypes.c_void_p()
+#     hbitmap = gdi32.CreateDIBSection(hdc_mem, byref(bmi), 0, byref(bits), 0, 0)
     
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
-    
-    pygame.init()
-    # Create screen using smaller WIDTH/HEIGHT if we wanted, but full screen transparent is safer for positioning
-    screen = pygame.display.set_mode((screen_w, screen_h), pygame.NOFRAME)
-    hwnd = pygame.display.get_wm_info()["window"]
-    
-    make_window_transparent(hwnd)
-    
-    # 2. Define the "Liquid" Blobs
-    # We mix different speeds (speed_x vs speed_y) to create chaotic movement
-    blobs = [
-        # Large slow background glow (Purple)
-        LiquidBlob(PURPLE,  max_radius=80, speed_x=1.2, speed_y=1.5, offset=0, wobble_amount=40),
-        
-        # Main body (Cyan/Blue) - Moving opposite ways
-        LiquidBlob(CYAN,    max_radius=60, speed_x=2.0, speed_y=1.8, offset=2, wobble_amount=35),
-        LiquidBlob(BLUE,    max_radius=65, speed_x=-1.8, speed_y=2.2, offset=1, wobble_amount=30),
-        
-        # Fast "Hot" Highlights (Magenta/White) - Tighter movement
-        LiquidBlob(MAGENTA, max_radius=50, speed_x=3.5, speed_y=3.0, offset=4, wobble_amount=20),
-        LiquidBlob(WHITE,   max_radius=30, speed_x=4.0, speed_y=4.5, offset=5, wobble_amount=10)
-    ]
-    
-    # Position: Bottom Center, raised up by 200px
-    center_pos = (screen_w // 2, screen_h - 200)
-    
-    clock = pygame.time.Clock()
-    start_time = time.time()
-    
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                running = False
-        
-        # Force TopMost
-        user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002)
+#     if hbitmap:
+#         gdi32.SelectObject(hdc_mem, hbitmap)
+#         ctypes.memmove(bits, pixel_data, len(pixel_data))
 
-        screen.fill(BG_COLOR)
-        t = time.time() - start_time
+#         # 5. Update Layered Window
+#         pt_src = POINT(0, 0)
+#         pt_win_pos = POINT(0, 0)
+#         sz_win = SIZE(w, h)
+#         blend = BLENDFUNCTION(0, 0, 255, AC_SRC_ALPHA)
+
+#         user32.UpdateLayeredWindow(
+#             hwnd, hdc_screen, byref(pt_win_pos), byref(sz_win),
+#             hdc_mem, byref(pt_src), 0, byref(blend), ULW_ALPHA
+#         )
+    
+#     # Cleanup
+#     if hbitmap: gdi32.DeleteObject(hbitmap)
+#     gdi32.DeleteDC(hdc_mem)
+#     user32.ReleaseDC(0, hdc_screen)
+
+# def interpolate_color(c1, c2, ratio):
+#     r = int(c1[0] * (1 - ratio) + c2[0] * ratio)
+#     g = int(c1[1] * (1 - ratio) + c2[1] * ratio)
+#     b = int(c1[2] * (1 - ratio) + c2[2] * ratio)
+#     return (r, g, b)
+
+# def create_gradient_surface(width, height):
+#     surf = pygame.Surface((width, height), pygame.SRCALPHA)
+#     # IMPORTANT: Do not fill with black. Leave it fully transparent (0 alpha).
+    
+#     center_x = width // 2
+#     center_y = height 
+#     max_radius = width // 2
+    
+#     steps = 100
+#     for i in range(steps):
+#         prog = i / steps
+#         radius_x = int(max_radius * (1 - prog))
+#         radius_y = int(height * (1 - prog))
         
-        for blob in blobs:
-            blob.draw(screen, center_pos, t)
-            
-        pygame.display.flip()
-        clock.tick(FPS)
+#         if radius_x <= 0 or radius_y <= 0: continue
 
-    pygame.quit()
+#         if prog < 0.3:
+#             ratio = prog / 0.3
+#             c = interpolate_color(COLOR_CORE, COLOR_GLOW, ratio)
+#             alpha = 180 
+#         else:
+#             c = COLOR_GLOW
+#             alpha_prog = (prog - 0.3) / 0.7
+#             alpha = int(120 * ((1 - alpha_prog)**2))
 
-if __name__ == "__main__":
-    main()
+#         pygame.draw.ellipse(surf, (*c, alpha), 
+#                             (center_x - radius_x, center_y - radius_y, radius_x*2, radius_y*2))
+#     return surf
+
+# def main():
+#     pygame.init()
+    
+#     info = pygame.display.Info()
+#     w, h = info.current_w, info.current_h
+    
+#     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
+    
+#     # [CRITICAL] Create Surface with SRCALPHA. 
+#     # NOFRAME is standard, but we rely on Windows API for the actual transparency layer.
+#     screen = pygame.display.set_mode((w, h), pygame.NOFRAME | pygame.SRCALPHA)
+    
+#     hwnd = pygame.display.get_wm_info()["window"]
+#     set_layered_style(hwnd)
+    
+#     # Assets
+#     BASE_W = w + 200
+#     BASE_H = 400
+#     glow_surf = create_gradient_surface(BASE_W, BASE_H)
+    
+#     clock = pygame.time.Clock()
+#     start_time = time.time()
+    
+#     running = True
+#     while running:
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 running = False
+        
+#         # 1. Clear Screen with Transparent Color (0,0,0,0)
+#         # This prevents the "Black Screen" effect
+#         screen.fill((0, 0, 0, 0))
+        
+#         # 2. Animation
+#         t = time.time() - start_time
+#         pulse = 1.0 + math.sin(t * 2.0) * 0.05
+        
+#         cur_w = int(BASE_W * pulse)
+#         cur_h = int(BASE_H * pulse)
+        
+#         scaled_glow = pygame.transform.smoothscale(glow_surf, (cur_w, cur_h))
+        
+#         x = (w // 2) - (cur_w // 2)
+#         y = h - cur_h + 120
+        
+#         screen.blit(scaled_glow, (x, y))
+        
+#         # 3. Send to Windows
+#         update_window_per_pixel(hwnd, screen)
+        
+#         clock.tick(FPS)
+        
+#     pygame.quit()
+
+# if __name__ == "__main__":
+#     main()
