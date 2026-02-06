@@ -2,7 +2,6 @@
 
 **Team:** SENTINELS  
 **University:** University of Peradeniya  
-**Course:** CO2020 – Computer Networking  
 
 ** The Project :** 2YP (Second Year Project)  
 CO2060 : Software Systems Design Project
