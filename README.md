@@ -6,16 +6,23 @@
 ** The Project :** 2YP (Second Year Project)  
 CO2060 : Software Systems Design Project
 ---
+## Team members 
+K.J.V.Kahagalla
+K.A.H.Kumarasinghe
+P.A.K.N.Sooriyabandara
+K.D.N.Chandrasena
+
 
 ## Project Overview
 
 The **AI Smart Assistant** is an intelligent software tool designed to help users interact with their computers more efficiently.
 It combines **screen reading (OCR)**, **AI reasoning**, and **automation** to guide users through tasks like software installations, error handling, and routine operations. 
 The system aims to simplify complex computer interactions and make them accessible even to non-technical users.
+For now this use local AI model.
 
 ---
 
-## Key Features
+## Key Features (Not yet)
 
 - **Screen Text Extraction (OCR):** Captures screen content in real-time and extracts text for processing.  
 - **Hotkey & Region Selection:** Users can trigger OCR with a hotkey and select specific screen areas for analysis.  
